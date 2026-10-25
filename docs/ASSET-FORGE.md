@@ -8,6 +8,8 @@ Multi-GPU hosts pass `reader.prepare --engine CYCLES`. The training renderer
 explicitly selects CUDA devices under `CUDA_VISIBLE_DEVICES` and reports their
 IDs. Eevee's graphics device does not follow a CUDA mask and is unsuitable for
 Forge's shared host allocation.
+Cycles training strips skip denoising; reader augmentation already includes noise
+and blur. This avoids a CPU denoising pass dominating GPU rendering time.
 
 - `blender/forge_prepare.py`: imports a rigged GLB/FBX, applies Forge's filming
   turn, exports the rig and saves a separate Blender source with the exact Forge

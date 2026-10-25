@@ -96,7 +96,10 @@ def studio(lo, hi, samples, engine):
         scene.render.engine = 'BLENDER_EEVEE_NEXT'
     if scene.render.engine == 'CYCLES':
         scene.cycles.samples = samples
-        scene.cycles.use_denoising = True
+        # Training already augments noise/blur. CPU denoising of the wide pose
+        # strips took 50+ seconds per image on Forge's host versus ~3 to render;
+        # keep the sampled pixels and avoid that unrelated CPU bottleneck.
+        scene.cycles.use_denoising = False
         prefs = bpy.context.preferences.addons['cycles'].preferences
         prefs.compute_device_type = 'CUDA'
         prefs.refresh_devices()
