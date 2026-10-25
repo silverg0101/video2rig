@@ -97,6 +97,16 @@ def studio(lo, hi, samples, engine):
     if scene.render.engine == 'CYCLES':
         scene.cycles.samples = samples
         scene.cycles.use_denoising = True
+        prefs = bpy.context.preferences.addons['cycles'].preferences
+        prefs.compute_device_type = 'CUDA'
+        prefs.refresh_devices()
+        for device in prefs.devices:
+            device.use = device.type == 'CUDA'
+        devices = [d for d in prefs.devices if d.use]
+        if not devices:
+            raise RuntimeError('no CUDA device for training renders; refusing a different GPU/backend')
+        scene.cycles.device = 'GPU'
+        print('render device: ' + ', '.join(d.id for d in devices), flush=True)
     else:
         scene.eevee.taa_render_samples = samples
     scene.view_settings.view_transform = 'AgX'

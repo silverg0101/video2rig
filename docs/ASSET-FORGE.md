@@ -4,6 +4,11 @@ This fork adds adapters; the original command-line workflow remains available.
 It does not depend on Seedance: Forge supplies its own model, calibrated first
 frame and MiniMax H3 video, or reuses a saved video.
 
+Multi-GPU hosts pass `reader.prepare --engine CYCLES`. The training renderer
+explicitly selects CUDA devices under `CUDA_VISIBLE_DEVICES` and reports their
+IDs. Eevee's graphics device does not follow a CUDA mask and is unsuitable for
+Forge's shared host allocation.
+
 - `blender/forge_prepare.py`: imports a rigged GLB/FBX, applies Forge's filming
   turn, exports the rig and saves a separate Blender source with the exact Forge
   front/side calibration. It never overwrites the source asset.

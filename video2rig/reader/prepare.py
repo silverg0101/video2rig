@@ -46,6 +46,8 @@ def main():
     ap.add_argument('--init', default='', help="another creature's reader.pt to start the training from")
     ap.add_argument('--copies', type=int, default=16)
     ap.add_argument('--samples', type=int, default=8)
+    ap.add_argument('--engine', choices=('BLENDER_EEVEE', 'CYCLES'), default='BLENDER_EEVEE',
+                    help='Forge multi-GPU hosts use CYCLES to respect CUDA_VISIBLE_DEVICES')
     ap.add_argument('--blender', default='')
     ap.add_argument('--keep', action='store_true', help='keep earlier renders (poses and pictures) if present')
     ap.add_argument('--workers', type=int, default=6, help='processes for the hidden-joint check')
@@ -76,6 +78,7 @@ def main():
                                     '--factory-startup', '--python', str(TOOL / 'blender' / 'render_poses.py'), '--',
                                     '--poses', str(rd / 'poses.npz'), '--cameras', str(pr.start_dir / 'cameras.json'),
                                     '--out', str(renders), '--copies', str(a.copies), '--samples', str(a.samples),
+                                    '--engine', a.engine,
                                     '--fit', str(SIZE), '--project', str(pr.root)],
                                    stdout=log, stderr=subprocess.STDOUT, creationflags=flags)
         from .visible import compute
