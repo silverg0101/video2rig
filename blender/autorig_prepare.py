@@ -49,6 +49,12 @@ def main():
     os.makedirs(out, exist_ok=True)
     load(os.path.abspath(a.model))
     scene = bpy.context.scene
+    # The glTF importer creates shared bone-display meshes (often a 2 m Icosphere).
+    # They are viewport widgets, not creature geometry; remove them before bounds/remeshing.
+    shapes = {pb.custom_shape for arm in scene.objects if arm.type == 'ARMATURE'
+              for pb in arm.pose.bones if pb.custom_shape is not None}
+    for obj in shapes:
+        bpy.data.objects.remove(obj, do_unlink=True)
     # no armature, no animation: the raw mesh in its own pose
     for o in list(scene.objects):
         if o.type == 'ARMATURE':
