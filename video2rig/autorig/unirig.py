@@ -1054,6 +1054,7 @@ def main():
     ap.add_argument('--unirig', default='', help='the UniRig folder (or set V2R_UNIRIG)')
     ap.add_argument('--blender', default='')
     ap.add_argument('--reuse', action='store_true', help='score the draws already in the work folders again')
+    ap.add_argument('--require-unirig', action='store_true', help='fail instead of silently substituting the centre-line fallback')
     ap.add_argument('--facing', default='auto', choices=['auto', *S.AXES],
                     help='the way the creature faces (default: from its shape)')
     a = ap.parse_args()
@@ -1076,6 +1077,8 @@ def main():
     if not a.reuse:
         unirig = find_unirig(a.unirig)
         if unirig is None:
+            if a.require_unirig:
+                raise RuntimeError('UniRig is required but not installed; install it or set V2R_UNIRIG')
             log('autorig: UniRig not found (--unirig or V2R_UNIRIG): the centre-line skeleton instead')
             for w in works:
                 subprocess.run([sys.executable, '-m', 'video2rig.autorig.skeleton', w], check=True, cwd=REPO)
@@ -1092,6 +1095,11 @@ def main():
     for w in works:
         draws = sorted(Path(w).glob('unirig-draw[0-9]*.json'))
         if not draws:
+            if a.require_unirig:
+                run = Path(works[0]) / 'unirig'
+                details = '\n'.join(p.read_text(errors='replace')[-2500:] for p in
+                    (run / 'extract.log', run / 'unirig.log') if p.is_file())
+                raise RuntimeError('UniRig produced no skeleton; inference logs:\n' + details)
             log(f'autorig: no UniRig draw for {w}: the centre-line skeleton instead')
             subprocess.run([sys.executable, '-m', 'video2rig.autorig.skeleton', w], check=True, cwd=REPO)
             continue

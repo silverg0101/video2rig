@@ -25,6 +25,8 @@ import bpy
 import numpy as np
 from mathutils import Euler, Matrix, Vector
 from mathutils.kdtree import KDTree
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from autorig_weights import segment_weights
 
 LIMB_ROLES = ('hind', 'front', 'biped', 'arm', 'wing', 'chain')
 
@@ -246,6 +248,15 @@ def heat_on_main(obj, arm, chains):
     # every vertex: its own weights if it is on the main part (and heat reached it), else the nearest main vertex's
     co = np.array([v.co for v in me.vertices])
     ok = keep[~empty]
+    if not len(ok):
+        # The solid proxy can still fail heat (thin/open generated meshes).
+        # Never query an empty KDTree. These provisional weights must pass the
+        # caller's deformation review before the creature can be accepted.
+        to_mesh = obj.matrix_world.inverted() @ arm.matrix_world
+        heads = [to_mesh @ arm.data.bones[n].head_local for n in names]
+        tails = [to_mesh @ arm.data.bones[n].tail_local for n in names]
+        print('AUTORIG_WEIGHTS provisional segment fallback: bone heat reached no vertices', flush=True)
+        return segment_weights(co, heads, tails), names, part, main
     kd = KDTree(len(ok))
     for k, i in enumerate(ok):
         kd.insert(Vector(co[i]), k)
